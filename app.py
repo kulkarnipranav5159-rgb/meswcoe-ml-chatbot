@@ -43,7 +43,7 @@ def load_assets():
     
     try:
         df = pd.read_csv('mescoe_dataset_expanded.csv')
-    except:
+    except Exception:
         df = pd.read_csv('mescoe_dataset.csv')
         
     metrics_df = pd.read_csv('model_metrics.csv')
@@ -135,9 +135,4 @@ with tab1:
         st.caption("Ask questions about courses, admissions, fees, hostel, or placements.")
 
         if "chat_messages" not in st.session_state:
-            st.session_state.chat_messages = [
-                {"role": "assistant", "content": "Hello! Welcome to MES Wadia College of Engineering. How can I assist you today?"}
-            ]
-
-        # Render conversation history inside popup window
-        for message in st.session_state.chat_messages
+            st.session_state.chat_messages =

@@ -7,6 +7,34 @@ import streamlit.components.v1 as components
 
 st.set_page_config(page_title="MESCOE College Portal & AI Chatbot", page_icon="🎓", layout="wide")
 
+# Custom CSS for Floating Chatbot Button in Bottom-Right Corner
+st.markdown("""
+    <style>
+        /* Floating Chatbot Container */
+        div[data-testid="stPopover"] {
+            position: fixed !important;
+            bottom: 30px !important;
+            right: 30px !important;
+            z-index: 999999 !important;
+        }
+        /* Style the Floating Trigger Button */
+        div[data-testid="stPopover"] > button {
+            background-color: #1e3a8a !important;
+            color: white !important;
+            border-radius: 50px !important;
+            padding: 12px 24px !important;
+            font-size: 16px !important;
+            font-weight: bold !important;
+            border: 2px solid white !important;
+            box-shadow: 0px 4px 15px rgba(0,0,0,0.3) !important;
+        }
+        div[data-testid="stPopover"] > button:hover {
+            background-color: #2563eb !important;
+            transform: scale(1.05);
+        }
+    </style>
+""", unsafe_allow_html=True)
+
 # Load model artifacts
 @st.cache_resource
 def load_assets():
@@ -19,32 +47,35 @@ def load_assets():
 try:
     model, vectorizer, dataset, metrics_df = load_assets()
 except Exception as e:
-    st.error(f"Error loading model assets: {e}")
+    st.error(f"Error loading assets: {e}")
     st.stop()
 
 intent_response_map = dict(zip(dataset['intent'], dataset['response']))
 
-# Create tabs (Hidden sidebar project details removed)
+# Main Navigation Tabs
 tab1, tab2, tab3 = st.tabs(["🏛️ MESCOE Website & AI Chatbot", "📊 Model Metrics", "📁 Dataset Preview"])
 
-# TAB 1: DUMMY COLLEGE WEBSITE & ML CHATBOT
+# TAB 1: DUMMY COLLEGE WEBSITE & FLOATING ML CHATBOT
 with tab1:
-    # Render College Website Banner & Header HTML
+    # Render Full College Website UI
     website_html = """
     <!DOCTYPE html>
     <html>
     <head>
     <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; background: #f4f6f9; }
-        header { background: #1e3a8a; color: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; }
-        header h1 { margin: 0; font-size: 20px; }
-        nav a { color: white; margin-left: 15px; text-decoration: none; font-weight: 500; font-size: 14px; }
+        header { background: #1e3a8a; color: white; padding: 18px 40px; display: flex; justify-content: space-between; align-items: center; }
+        header h1 { margin: 0; font-size: 22px; }
+        nav a { color: white; margin-left: 20px; text-decoration: none; font-weight: 500; font-size: 15px; }
         .hero { background: linear-gradient(rgba(30,58,138,0.85), rgba(30,58,138,0.85)), url('https://mescoe.mespune.org/wp-content/uploads/2021/09/slider1.jpg'); 
-                background-size: cover; color: white; padding: 40px 20px; text-align: center; }
-        .cards { display: flex; gap: 15px; padding: 20px; justify-content: center; flex-wrap: wrap; }
-        .card { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 180px; text-align: center; }
-        .card h3 { color: #1e3a8a; margin-top: 0; font-size: 16px; }
-        .card p { font-size: 13px; color: #333; margin: 5px 0 0 0; }
+                background-size: cover; color: white; padding: 60px 20px; text-align: center; }
+        .hero h2 { font-size: 32px; margin-bottom: 10px; }
+        .hero p { font-size: 18px; opacity: 0.9; }
+        .cards { display: flex; gap: 20px; padding: 40px 20px; justify-content: center; flex-wrap: wrap; }
+        .card { background: white; padding: 25px; border-radius: 10px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); width: 200px; text-align: center; border-top: 4px solid #1e3a8a; }
+        .card h3 { color: #1e3a8a; margin-top: 0; font-size: 18px; }
+        .card p { font-size: 14px; color: #475569; margin-top: 10px; line-height: 1.5; }
+        footer { background: #0f172a; color: #94a3b8; text-align: center; padding: 20px; font-size: 14px; margin-top: 20px; }
     </style>
     </head>
     <body>
@@ -83,47 +114,47 @@ with tab1:
         </div>
     </div>
 
+    <footer>
+        <p>© Modern Education Society's Wadia College of Engineering, Pune. All Rights Reserved.</p>
+    </footer>
+
     </body>
     </html>
     """
-    components.html(website_html, height=280, scrolling=False)
+    # Increased height so full UI cards and footer display clearly
+    components.html(website_html, height=520, scrolling=True)
 
-    st.markdown("---")
-    st.subheader("💬 MESCOE AI Assistant")
-    st.caption("Ask questions about courses, admissions, fees, hostel, exams, or placements.")
+    # FLOATING AI CHATBOT WIDGET
+    with st.popover("💬 Chat with AI Assistant"):
+        st.subheader("🤖 MESCOE AI Chatbot")
+        st.caption("Ask questions about courses, admissions, fees, hostel, or placements.")
 
-    # Initialize chat memory
-    if "chat_messages" not in st.session_state:
-        st.session_state.chat_messages = [
-            {"role": "assistant", "content": "Hello! Welcome to MES Wadia College of Engineering. How can I help you today?"}
-        ]
+        if "chat_messages" not in st.session_state:
+            st.session_state.chat_messages = [
+                {"role": "assistant", "content": "Hello! Welcome to MES Wadia College of Engineering. How can I assist you today?"}
+            ]
 
-    # Display chat log
-    for message in st.session_state.chat_messages:
-        with st.chat_message(message["role"]):
-            st.write(message["content"])
+        # Render conversation history inside popup window
+        for message in st.session_state.chat_messages:
+            with st.chat_message(message["role"]):
+                st.write(message["content"])
 
-    # Interactive Chat Input & ML Intent Classification
-    if user_input := st.chat_input("Type your question here (e.g., What courses are available?)..."):
-        st.session_state.chat_messages.append({"role": "user", "content": user_input})
-        with st.chat_message("user"):
-            st.write(user_input)
+        # Input box inside popup
+        if user_input := st.chat_input("Ask a question..."):
+            st.session_state.chat_messages.append({"role": "user", "content": user_input})
+            
+            # ML Intent Prediction
+            input_vector = vectorizer.transform([user_input])
+            predicted_intent = model.predict(input_vector)[0]
+            bot_response = intent_response_map.get(
+                predicted_intent, 
+                "I apologize, I didn't quite understand that. Please contact info@mescoepune.org for details."
+            )
 
-        # Scikit-learn TF-IDF Vectorization & Prediction
-        input_vector = vectorizer.transform([user_input])
-        predicted_intent = model.predict(input_vector)[0]
-        bot_response = intent_response_map.get(
-            predicted_intent, 
-            "I apologize, I didn't quite understand that. Please contact info@mescoepune.org for details."
-        )
+            st.session_state.chat_messages.append({"role": "assistant", "content": bot_response})
+            st.rerun()
 
-        with st.chat_message("assistant"):
-            st.write(bot_response)
-            st.caption(f"*ML Predicted Intent:* `{predicted_intent}`")
-
-        st.session_state.chat_messages.append({"role": "assistant", "content": bot_response})
-
-# TAB 2: MODEL EVALUATION
+# TAB 2: MODEL METRICS
 with tab2:
     st.header("📊 Model Metrics")
     st.dataframe(metrics_df, use_container_width=True)

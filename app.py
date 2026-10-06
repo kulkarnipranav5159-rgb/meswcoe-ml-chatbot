@@ -41,7 +41,6 @@ def load_assets():
     model = joblib.load('mescoe_chatbot_model.pkl')
     vectorizer = joblib.load('tfidf_vectorizer.pkl')
     
-    # Try loading the expanded dataset first, fallback to original
     try:
         df = pd.read_csv('mescoe_dataset_expanded.csv')
     except:
@@ -56,7 +55,7 @@ except Exception as e:
     st.error(f"Error loading assets: {e}")
     st.stop()
 
-# Ensure intent_response_map is constructed as a clean, exact dictionary mapping each intent string to its response
+# Clean dictionary mapping intent string to its response
 intent_response_map = dict(zip(dataset['intent'], dataset['response']))
 
 # Main Navigation Tabs
@@ -141,25 +140,4 @@ with tab1:
             ]
 
         # Render conversation history inside popup window
-        for message in st.session_state.chat_messages:
-            with st.chat_message(message["role"]):
-                st.write(message["content"])
-
-        # Input box inside popup
-        if user_input := st.chat_input("Ask a question..."):
-            st.session_state.chat_messages.append({"role": "user", "content": user_input})
-            
-            # Clean input string: remove spaces and lowercase
-            cleaned_input = user_input.strip().lower()
-            
-            # Vectorize cleaned text and run ML prediction
-            input_vector = vectorizer.transform([cleaned_input])
-            predicted_intent = model.predict(input_vector)[0]
-            
-            # Direct exact key lookup in mapping dictionary
-            bot_response = intent_response_map.get(
-                predicted_intent, 
-                "I apologize, I didn't quite understand that. Please contact info@mescoepune.org for details."
-            )
-
-            st.session_state.
+        for message in st.session_state.chat_messages

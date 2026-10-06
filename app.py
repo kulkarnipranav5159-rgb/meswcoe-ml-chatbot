@@ -40,11 +40,13 @@ st.markdown("""
 def load_assets():
     model = joblib.load('mescoe_chatbot_model.pkl')
     vectorizer = joblib.load('tfidf_vectorizer.pkl')
-    # Load dataset
+    
+    # Try loading the expanded dataset first, fallback to original
     try:
         df = pd.read_csv('mescoe_dataset_expanded.csv')
     except:
         df = pd.read_csv('mescoe_dataset.csv')
+        
     metrics_df = pd.read_csv('model_metrics.csv')
     return model, vectorizer, df, metrics_df
 
@@ -54,8 +56,8 @@ except Exception as e:
     st.error(f"Error loading assets: {e}")
     st.stop()
 
-# Map unique intent tags to responses
-intent_response_map = dataset.drop_duplicates(subset=['intent']).set_index('intent')['response'].to_dict()
+# Ensure intent_response_map is constructed as a clean, exact dictionary mapping each intent string to its response
+intent_response_map = dict(zip(dataset['intent'], dataset['response']))
 
 # Main Navigation Tabs
 tab1, tab2, tab3 = st.tabs(["🏛️ MESCOE Website & AI Chatbot", "📊 Model Metrics", "📁 Dataset Preview"])
@@ -147,31 +149,17 @@ with tab1:
         if user_input := st.chat_input("Ask a question..."):
             st.session_state.chat_messages.append({"role": "user", "content": user_input})
             
-            # ML Intent Prediction
-            input_vector = vectorizer.transform([user_input])
+            # Clean input string: remove spaces and lowercase
+            cleaned_input = user_input.strip().lower()
+            
+            # Vectorize cleaned text and run ML prediction
+            input_vector = vectorizer.transform([cleaned_input])
             predicted_intent = model.predict(input_vector)[0]
             
+            # Direct exact key lookup in mapping dictionary
             bot_response = intent_response_map.get(
                 predicted_intent, 
                 "I apologize, I didn't quite understand that. Please contact info@mescoepune.org for details."
             )
 
-            st.session_state.chat_messages.append({"role": "assistant", "content": bot_response})
-            st.rerun()
-
-# TAB 2: MODEL METRICS
-with tab2:
-    st.header("📊 Model Metrics")
-    st.dataframe(metrics_df, use_container_width=True)
-
-    fig, ax = plt.subplots(figsize=(6, 3))
-    sns.barplot(x='Model', y='Accuracy', data=metrics_df, palette='Blues_d', ax=ax)
-    ax.set_ylim(0, 1.1)
-    ax.set_ylabel("Accuracy")
-    ax.set_title("Model Accuracy Comparison")
-    st.pyplot(fig)
-
-# TAB 3: DATASET PREVIEW
-with tab3:
-    st.header("📁 Dataset Preview")
-    st.dataframe(dataset, use_container_width=True)
+            st.session_state.
